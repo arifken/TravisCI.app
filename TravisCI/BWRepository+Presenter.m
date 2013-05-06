@@ -11,6 +11,7 @@
 
 #import "NSDate+Formatting.h"
 #import "BWPresenter.h"
+#import "UIAlertView+BWTravisCI.h"
 
 @implementation BWCDRepository (Presenter)
 
@@ -19,9 +20,18 @@
     RKObjectManager *manager = [RKObjectManager sharedManager];
 
     NSString *resourcePath = [NSString stringWithFormat:@"/repositories/%@.json", remote_id];
-    [manager loadObjectsAtResourcePath:resourcePath
-                         objectMapping:[manager.mappingProvider mappingForKeyPath:@"BWCDRepository"]
-                              delegate:nil];
+//    [manager loadObjectsAtResourcePath:resourcePath
+//                         objectMapping:[manager.mappingProvider mappingForKeyPath:@"BWCDRepository"]
+//                              delegate:nil];
+
+    NSURLRequest *request = [manager requestWithObject:nil method:RKRequestMethodGET path:resourcePath parameters:nil];
+    RKObjectRequestOperation *operation = [[RKObjectRequestOperation alloc] initWithRequest:request responseDescriptors:manager.responseDescriptors];
+    [operation setCompletionBlockWithSuccess:^(RKObjectRequestOperation *op, RKMappingResult *mappingResult) {
+          // TODO: handle completion block
+    } failure:^(RKObjectRequestOperation *op, NSError *error) {
+        [UIAlertView showGenericError];
+    }];
+
 }
 
 - (void)fetchBuilds
@@ -29,9 +39,18 @@
     RKObjectManager *manager = [RKObjectManager sharedManager];
 
     NSString *resourcePath = [NSString stringWithFormat:@"/repositories/%@/builds.json", self.remote_id];
-    [manager loadObjectsAtResourcePath:resourcePath
-                         objectMapping:[manager.mappingProvider mappingForKeyPath:@"BWCDBuild"]
-                              delegate:nil];
+//    [manager loadObjectsAtResourcePath:resourcePath
+//                         objectMapping:[manager.mappingProvider mappingForKeyPath:@"BWCDBuild"]
+//                              delegate:nil];
+
+    NSURLRequest *request = [manager requestWithObject:nil method:RKRequestMethodGET path:resourcePath parameters:nil];
+    RKObjectRequestOperation *operation = [[RKObjectRequestOperation alloc] initWithRequest:request responseDescriptors:manager.responseDescriptors];
+    [operation setCompletionBlockWithSuccess:^(RKObjectRequestOperation *op, RKMappingResult *mappingResult) {
+          // TODO: handle completion block
+    } failure:^(RKObjectRequestOperation *op, NSError *error) {
+        [UIAlertView showGenericError];
+    }];
+
 }
 
 PRESENT_statusImage

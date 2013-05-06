@@ -14,6 +14,7 @@
 #import "BWCDBuild.h"
 #import "NSString+BWTravisCI.h"
 #import "BWPresenter.h"
+#import "UIAlertView+BWTravisCI.h"
 
 @interface BWCDJob (Presenter)
 - (BWStatus)currentStatus;
@@ -142,9 +143,18 @@ PRESENT_statusTextColor
     NSString *resourcePath = [NSString stringWithFormat:@"/jobs/%@.json", self.remote_id];
     // do not set delegate to self. If self is a property of a view controller that gets dealloc'ed before
     // the request is finished, the app will crash with EXC_BAD_ACCESS
-    [manager loadObjectsAtResourcePath:resourcePath
-                         objectMapping:[manager.mappingProvider mappingForKeyPath:@"BWCDJob"]
-                              delegate:nil];
+//    [manager loadObjectsAtResourcePath:resourcePath
+//                         objectMapping:[manager.mappingProvider mappingForKeyPath:@"BWCDJob"]
+//                              delegate:nil];
+
+    NSURLRequest *request = [manager requestWithObject:nil method:RKRequestMethodGET path:resourcePath parameters:nil];
+    RKObjectRequestOperation *operation = [[RKObjectRequestOperation alloc] initWithRequest:request responseDescriptors:manager.responseDescriptors];
+    [operation setCompletionBlockWithSuccess:^(RKObjectRequestOperation *op, RKMappingResult *mappingResult) {
+          // TODO: handle completion block
+    } failure:^(RKObjectRequestOperation *op, NSError *error) {
+        [UIAlertView showGenericError];
+    }];
+
 }
 
 - (void)fetchDetailsIfNeeded

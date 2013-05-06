@@ -52,7 +52,7 @@
     self.showingFavorites = NO;
 }
 
-- (void)viewWillAppear:(BOOL)animated { 
+- (void)viewWillAppear:(BOOL)animated {
 
     [super viewWillAppear:animated];
 
@@ -147,13 +147,13 @@
 - (void)setFetchRequestToFavorites
 {
     NSFetchRequest *fetchRequest = self.fetchedResultsController.fetchRequest;
-    
+
     BWAppDelegate *appDelegate = (BWAppDelegate *)[UIApplication sharedApplication].delegate;
     NSArray *remote_ids = [appDelegate.favoriteList.all array];
     NSPredicate *predicate = [NSPredicate predicateWithFormat:@"remote_id IN %@", remote_ids];
-    
+
     [fetchRequest setPredicate:predicate];
-    
+
     NSError *error = nil;
     [self.fetchedResultsController performFetch:&error];
 }
@@ -169,9 +169,9 @@
 - (void)setFetchRequestToAll
 {
     NSFetchRequest *fetchRequest = self.fetchedResultsController.fetchRequest;
-    
+
     [fetchRequest setPredicate:nil];
-    
+
     NSError *error = nil;
     [self.fetchedResultsController performFetch:&error];
 }
@@ -189,10 +189,10 @@
     NSFetchRequest *fetchRequest = [[NSFetchRequest alloc] init];
     NSEntityDescription *entity = [NSEntityDescription entityForName:@"BWCDRepository" inManagedObjectContext:self.managedObjectContext];
     [fetchRequest setEntity:entity];
-    
+
     NSSortDescriptor *sortDescriptor = [[NSSortDescriptor alloc] initWithKey:@"last_build_started_at" ascending:NO];
     NSArray *sortDescriptors = [NSArray arrayWithObjects:sortDescriptor, nil];
-    
+
     [fetchRequest setSortDescriptors:sortDescriptors];
 
     return fetchRequest;
@@ -230,20 +230,20 @@
       newIndexPath:(NSIndexPath *)newIndexPath
 {
     UITableView *tableView = self.tableView;
-    
+
     switch(type) {
         case NSFetchedResultsChangeInsert:
             [tableView insertRowsAtIndexPaths:[NSArray arrayWithObject:newIndexPath] withRowAnimation:UITableViewRowAnimationFade];
             break;
-            
+
         case NSFetchedResultsChangeDelete:
             [tableView deleteRowsAtIndexPaths:[NSArray arrayWithObject:indexPath] withRowAnimation:UITableViewRowAnimationFade];
             break;
-            
+
         case NSFetchedResultsChangeUpdate:
             [self configureCell:(BWRepositoryTableCell *)[tableView cellForRowAtIndexPath:indexPath] atIndexPath:indexPath];
             break;
-            
+
         case NSFetchedResultsChangeMove:
             [tableView deleteRowsAtIndexPaths:[NSArray arrayWithObject:indexPath] withRowAnimation:UITableViewRowAnimationFade];
             [tableView insertRowsAtIndexPaths:[NSArray arrayWithObject:newIndexPath]withRowAnimation:UITableViewRowAnimationFade];
@@ -264,7 +264,7 @@
     [cell.slug setTextColor:repository.statusTextColor];
     [cell.buildNumber setTextColor:repository.statusTextColor];
     [cell.statusImage setImage:repository.statusImage];
-    
+
     cell.accessibilityLabel = repository.accessibilityLabel;
     cell.accessibilityHint = repository.accessibilityHint;
 
@@ -276,9 +276,37 @@
 {
     RKObjectManager *manager = [RKObjectManager sharedManager];
 
-    [manager loadObjectsAtResourcePath:@"/repositories.json"
-                         objectMapping:[manager.mappingProvider mappingForKeyPath:@"BWCDRepository"]
-                              delegate:nil];
+//    [manager ]
+
+//    [manager loadObjectsAtResourcePath:@"/repositories.json"
+//                         objectMapping:[manager.mappingProvider mappingForKeyPath:@"BWCDRepository"]
+//                              delegate:nil];
+
+
+    NSURLRequest *request = [manager requestWithObject:nil method:RKRequestMethodGET path:@"/repositories.json" parameters:nil];
+    RKObjectRequestOperation *operation = [[RKObjectRequestOperation alloc] initWithRequest:request responseDescriptors:manager.responseDescriptors];
+    [operation setCompletionBlockWithSuccess:^(RKObjectRequestOperation *op, RKMappingResult *mappingResult) {
+
+    } failure:^(RKObjectRequestOperation *op, NSError *error) {
+        [self showFailureDialog];
+    }];
+
+
+
+//    RKObjectMapping *mapping = [RKObjectMapping mappingForClass:[Article class]];
+//    [mapping addAttributeMappingsFromArray:@[@"title", @"author", @"body"]];
+//    NSIndexSet *statusCodes = RKStatusCodeIndexSetForClass(RKStatusCodeClassSuccessful); // Anything in 2xx
+//    RKResponseDescriptor *responseDescriptor = [RKResponseDescriptor responseDescriptorWithMapping:mapping pathPattern:@"/articles/:articleID" keyPath:@"article" statusCodes:statusCodes];
+//
+//    NSURLRequest *request = [NSURLRequest requestWithURL:[NSURL URLWithString:@"http://restkit.org/articles/1234.json"]];
+//    RKObjectRequestOperation *operation = [[RKObjectRequestOperation alloc] initWithRequest:request responseDescriptors:@[responseDescriptor]];
+//    [operation setCompletionBlockWithSuccess:^(RKObjectRequestOperation *operation, RKMappingResult *result) {
+//        Article *article = [result firstObject];
+//        NSLog(@"Mapped the article: %@", article);
+//    } failure:^(RKObjectRequestOperation *operation, NSError *error) {
+//        NSLog(@"Failed with error: %@", [error localizedDescription]);
+//    }];
+//    [operation start];
 }
 
 - (void)refreshFavoritesList
@@ -287,12 +315,32 @@
     NSArray *remote_ids = [appDelegate.favoriteList.all array];
     RKObjectManager *manager = [RKObjectManager sharedManager];
 
-    for (NSNumber *remote_id in remote_ids) {
-        [manager loadObjectsAtResourcePath:@"/repositories.json"
-                             objectMapping:[manager.mappingProvider mappingForKeyPath:@"BWCDRepository"]
-                                  delegate:nil];
-    }
+//    for (NSNumber *remote_id in remote_ids) {
+//        [manager loadObjectsAtResourcePath:@"/repositories.json"
+//                             objectMapping:[manager.mappingProvider mappingForKeyPath:@"BWCDRepository"]
+//                                  delegate:nil];
+//
+//
+//
+//    }
 
+    NSURLRequest *request = [manager requestWithObject:nil method:RKRequestMethodGET path:@"/repositories.json" parameters:nil];
+    RKObjectRequestOperation *operation = [[RKObjectRequestOperation alloc] initWithRequest:request responseDescriptors:manager.responseDescriptors];
+    [operation setCompletionBlockWithSuccess:^(RKObjectRequestOperation *op, RKMappingResult *mappingResult) {
+
+    } failure:^(RKObjectRequestOperation *op, NSError *error) {
+        [self showFailureDialog];
+    }];
+
+}
+
+- (void)showFailureDialog {
+    UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Network Error"
+                                                        message:@"Could not connect to the Travis CI service"
+                                                       delegate:nil
+                                              cancelButtonTitle:@"Bummer"
+                                              otherButtonTitles:nil];
+    [alert show];
 }
 
 #pragma mark Getters and Setters
@@ -302,9 +350,9 @@
     if (_buildListController != nil) {
         return _buildListController;
     }
-    
+
     _buildListController = [[BWBuildListViewController alloc] initWithStyle:UITableViewStylePlain];
-    
+
     return _buildListController;
 }
 

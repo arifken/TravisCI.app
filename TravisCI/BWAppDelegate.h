@@ -12,7 +12,7 @@
 
 @class BWPusherHandler, BWDetailContainerViewController, BWCDJob, BWFavoriteList;
 
-@interface BWAppDelegate : UIResponder <UIApplicationDelegate, RKObjectLoaderDelegate, PTPusherDelegate>
+@interface BWAppDelegate : UIResponder <UIApplicationDelegate, PTPusherDelegate>
 
 @property (strong, nonatomic) UIWindow *window;
 @property (strong, nonatomic) BWDetailContainerViewController *detailContainerViewController;

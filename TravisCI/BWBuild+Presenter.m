@@ -9,6 +9,7 @@
 #import "BWBuild+Presenter.h"
 #import "BWPresenter.h"
 #import "CoreData.h"
+#import "UIAlertView+BWTravisCI.h"
 
 @implementation BWCDBuild (Presenter)
 
@@ -20,9 +21,18 @@ PRESENT_statusTextColor
     RKObjectManager *manager = [RKObjectManager sharedManager];
     
     NSString *resourcePath = [NSString stringWithFormat:@"/builds/%@.json", self.remote_id];
-    [manager loadObjectsAtResourcePath:resourcePath
-                         objectMapping:[manager.mappingProvider mappingForKeyPath:@"BWCDBuild"]
-                              delegate:nil];
+//    [manager loadObjectsAtResourcePath:resourcePath
+//                         objectMapping:[manager.mappingProvider mappingForKeyPath:@"BWCDBuild"]
+//                              delegate:nil];
+
+    NSURLRequest *request = [manager requestWithObject:nil method:RKRequestMethodGET path:resourcePath parameters:nil];
+    RKObjectRequestOperation *operation = [[RKObjectRequestOperation alloc] initWithRequest:request responseDescriptors:manager.responseDescriptors];
+    [operation setCompletionBlockWithSuccess:^(RKObjectRequestOperation *op, RKMappingResult *mappingResult) {
+          // TODO: handle completion block
+    } failure:^(RKObjectRequestOperation *op, NSError *error) {
+        [UIAlertView showGenericError];
+    }];
+
 }
 
 - (NSString *)commit

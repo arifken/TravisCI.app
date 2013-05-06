@@ -269,7 +269,7 @@
     }
 
     NSFetchRequest *fetchRequest = [[NSFetchRequest alloc] init];
-    NSManagedObjectContext *moc = [[RKObjectManager sharedManager].objectStore managedObjectContextForCurrentThread];
+    NSManagedObjectContext *moc = [[RKObjectManager sharedManager].managedObjectStore mainQueueManagedObjectContext];
     NSEntityDescription *entity = [NSEntityDescription entityForName:@"BWCDBuild" inManagedObjectContext:moc];
     [fetchRequest setEntity:entity];
 

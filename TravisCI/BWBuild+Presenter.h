@@ -7,7 +7,6 @@
 //
 
 #import "BWCDBuild.h"
-#import "RKObjectLoader.h"
 
 @interface BWCDBuild (Presenter)
 

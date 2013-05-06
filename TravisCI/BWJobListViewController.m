@@ -186,7 +186,7 @@
         return __fetchedResultsController;
     }
     
-    NSManagedObjectContext *moc = [[RKObjectManager sharedManager].objectStore managedObjectContextForCurrentThread];
+    NSManagedObjectContext *moc = [[RKObjectManager sharedManager].managedObjectStore mainQueueManagedObjectContext];
 
     NSFetchRequest *fetchRequest = [[NSFetchRequest alloc] init];
     NSEntityDescription *entity = [NSEntityDescription entityForName:@"BWCDJob" inManagedObjectContext:moc];

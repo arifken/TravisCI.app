@@ -10,6 +10,7 @@
 #import <CoreData.h>
 #import "BWCDRepository.h"
 #import "BWJob+all.h"
+#import "NSManagedObject+BWTravisCI.h"
 
 
 @implementation BWCDObjectMananger
@@ -19,25 +20,35 @@
     NSNumber *repository_id = [repositoryDictionary valueForKey:@"id"];
 
     RKObjectManager *manager = [RKObjectManager sharedManager];
-    RKManagedObjectStore *objectStore = manager.objectStore;
-    NSManagedObjectContext *moc = [objectStore managedObjectContextForCurrentThread];
+    RKManagedObjectStore *objectStore = manager.managedObjectStore;
+
+//    NSManagedObjectContext *moc = [[NSManagedObjectContext alloc] init];
+//    moc.persistentStoreCoordinator = objectStore.persistentStoreCoordinator;
+
+    NSManagedObjectContext *moc = [objectStore mainQueueManagedObjectContext];
+
 
     BWCDRepository *repository = [BWCDRepository findFirstByAttribute:@"remote_id" withValue:repository_id inContext:moc];
 
     if (repository == nil) {
-        // TODO: re-insert "findOrCreate" into NSManagedObject+ActiveRecord
-        repository = [BWCDRepository findFirstByAttribute:@"remote_id" withValue:repository_id];
+        repository = [BWCDRepository findFirstByAttribute:@"remote_id" withValue:repository_id inContext:moc];
         if ( ! repository ) {
-            repository = [BWCDRepository createEntity];
+            repository = [BWCDRepository createEntityInContext:moc];
             repository.remote_id = repository_id;
         }
         [moc insertObject:repository];
     }
 
-    RKObjectMappingDefinition *mapping = [manager.mappingProvider mappingForKeyPath:@"BWCDRepository"];
-    RKObjectMappingOperation *mappingOp = [RKObjectMappingOperation mappingOperationFromObject:repositoryDictionary
-                                                                                      toObject:repository
-                                                                                   withMapping:mapping];
+    RKObjectMapping *mapping = [RKObjectMapping mappingForClass:[BWCDRepository class]];
+    RKMappingOperation *mappingOp = [[RKMappingOperation alloc] initWithSourceObject:repositoryDictionary destinationObject:repository mapping:mapping];
+
+
+
+                                                 //    RKObjectMappingDefinition *mapping = [manager.mappingProvider mappingForKeyPath:@"BWCDRepository"];
+
+//    RKObjectMappingOperation *mappingOp = [RKObjectMappingOperation mappingOperationFromObject:repositoryDictionary
+//                                                                                      toObject:repository
+//                                                                                   withMapping:mapping];
 
     NSError *error = nil;
     [mappingOp performMapping:&error];
@@ -56,25 +67,28 @@
     NSNumber *jobId = [jobDictionary valueForKey:@"id"];
 
     RKObjectManager *manager = [RKObjectManager sharedManager];
-    RKManagedObjectStore *objectStore = manager.objectStore;
-    NSManagedObjectContext *moc = [objectStore managedObjectContextForCurrentThread];
+    RKManagedObjectStore *objectStore = manager.managedObjectStore;
+    NSManagedObjectContext *moc = [objectStore mainQueueManagedObjectContext];
 
     BWCDJob *job = [BWCDJob findFirstByAttribute:@"remote_id" withValue:jobId inContext:moc];
 
     if (job == nil) { // create job
-        BWCDJob *jobInStore = [BWCDJob findFirstByAttribute:@"remote_id" withValue:jobId];
+        BWCDJob *jobInStore = [BWCDJob findFirstByAttribute:@"remote_id" withValue:jobId inContext:moc];
         if ( ! jobInStore ) {
-            jobInStore = [BWCDJob createEntity];
+            jobInStore = [BWCDJob createEntityInContext:moc];
             jobInStore.remote_id = jobId;
         }
         job = jobInStore;
         [moc insertObject:job];
     }
 
-    RKObjectMappingDefinition *mapping = [manager.mappingProvider mappingForKeyPath:@"BWCDJob"];
-    RKObjectMappingOperation *mappingOp = [RKObjectMappingOperation mappingOperationFromObject:jobDictionary
-                                                                                      toObject:job
-                                                                                   withMapping:mapping];
+    RKObjectMapping *mapping = [RKObjectMapping mappingForClass:[BWCDJob class]];
+        RKMappingOperation *mappingOp = [[RKMappingOperation alloc] initWithSourceObject:jobDictionary destinationObject:job mapping:mapping];
+
+//    RKObjectMappingDefinition *mapping = [manager.mappingProvider mappingForKeyPath:@"BWCDJob"];
+//    RKObjectMappingOperation *mappingOp = [RKObjectMappingOperation mappingOperationFromObject:jobDictionary
+//                                                                                      toObject:job
+//                                                                                   withMapping:mapping];
 
     NSError *error = nil;
     [mappingOp performMapping:&error];
@@ -94,15 +108,15 @@
 {
     NSNumber *jobId = [logDictionary valueForKey:@"id"];
     RKObjectManager *manager = [RKObjectManager sharedManager];
-    RKManagedObjectStore *objectStore = manager.objectStore;
-    NSManagedObjectContext *moc = [objectStore managedObjectContextForCurrentThread];
+    RKManagedObjectStore *objectStore = manager.managedObjectStore;
+    NSManagedObjectContext *moc = [objectStore mainQueueManagedObjectContext];
     
     BWCDJob *job = [BWCDJob findFirstByAttribute:@"remote_id" withValue:jobId inContext:moc];
 
     if (job == nil) { //create job
-        BWCDJob *jobInStore = [BWCDJob findFirstByAttribute:@"remote_id" withValue:jobId];
+        BWCDJob *jobInStore = [BWCDJob findFirstByAttribute:@"remote_id" withValue:jobId inContext:moc];
         if ( ! jobInStore ) {
-            jobInStore = [BWCDJob createEntity];
+            jobInStore = [BWCDJob createEntityInContext:moc];
             jobInStore.remote_id = jobId;
         }
         job = jobInStore;

@@ -70,62 +70,125 @@
 
 - (void)setupRestKit
 {
-    
+
 //    RKLogConfigureByName("RestKit/ObjectMapping", RKLogLevelTrace);
 //    RKLogConfigureByName("RestKit/CoreData", RKLogLevelTrace);
 
 
-    RKObjectManager *manager = [RKObjectManager objectManagerWithBaseURL:[NSURL URLWithString:TRAVIS_CI_URL]]; // sets up singleton shared object manager
-    manager.objectStore = [RKManagedObjectStore objectStoreWithStoreFilename:TRAVIS_CI_CD_FILE_NAME
-                                                                 inDirectory:[[self applicationCacheDirectory] path]
-                                                       usingSeedDatabaseName:nil
-                                                          managedObjectModel:self.managedObjectModel
-                                                                    delegate:nil];
+    RKObjectManager *manager = [RKObjectManager managerWithBaseURL:[NSURL URLWithString:TRAVIS_CI_URL]]; // sets up singleton shared object manager
+//    manager.objectStore = [RKManagedObjectStore storeWithStoreFilename:TRAVIS_CI_CD_FILE_NAME
+//                                                                 inDirectory:[[self applicationCacheDirectory] path]
+//                                                       usingSeedDatabaseName:nil
+//                                                          managedObjectModel:self.managedObjectModel
+//                                                                    delegate:nil];
 
-//    manager.client.requestQueue.showsNetworkActivityIndicatorWhenBusy = YES;
+    [AFNetworkActivityIndicatorManager sharedManager].enabled = YES;
 
+    manager.managedObjectStore = [[RKManagedObjectStore alloc] initWithManagedObjectModel:self.managedObjectModel];
 
 
     NSEntityDescription *repositoryDescription = [NSEntityDescription entityForName:@"BWCDRepository"
                                                              inManagedObjectContext:self.managedObjectContext];
-    
-    RKManagedObjectMapping *repositoryMapping = [RKManagedObjectMapping mappingForEntity:repositoryDescription inManagedObjectStore:manager.objectStore];
-    [repositoryMapping mapAttributes:@"slug", @"last_build_started_at", @"last_build_finished_at", @"last_build_duration", @"last_build_id", @"last_build_language", @"last_build_number", @"last_build_result", @"last_build_status", nil];
-    [repositoryMapping mapKeyPath:@"id" toAttribute:@"remote_id"];
-    [repositoryMapping mapKeyPath:@"description" toAttribute:@"remote_description"];
-    repositoryMapping.primaryKeyAttribute = @"remote_id";
 
-    [manager.mappingProvider setMapping:repositoryMapping forKeyPath:@"BWCDRepository"];
+    RKEntityMapping *repositoryMapping = [RKEntityMapping mappingForEntityForName:repositoryDescription inManagedObjectStore:manager.managedObjectStore];
+    repositoryMapping.identificationAttributes = @[@"remote_id"];
+    [repositoryMapping addAttributeMappingsFromArray:@[@"slug", @"last_build_started_at", @"last_build_finished_at", @"last_build_duration", @"last_build_id", @"last_build_language", @"last_build_number", @"last_build_result", @"last_build_status"]];
+    [repositoryMapping addAttributeMappingsFromDictionary:@{
+            @"id" : @"remote_id",
+            @"description" : @"remote_description",
+    }];
+
+
+
+
+
+
+//    RKManagedObjectMapping *repositoryMapping = [RKManagedObjectMapping mappingForEntity:repositoryDescription inManagedObjectStore:manager.objectStore];
+//    [repositoryMapping mapAttributes:@"slug", @"last_build_started_at", @"last_build_finished_at", @"last_build_duration", @"last_build_id", @"last_build_language", @"last_build_number", @"last_build_result", @"last_build_status", nil];
+//    [repositoryMapping mapKeyPath:@"id" toAttribute:@"remote_id"];
+//    [repositoryMapping mapKeyPath:@"description" toAttribute:@"remote_description"];
+//    repositoryMapping.primaryKeyAttribute = @"remote_id";
+
+//    [manager.mappingProvider setMapping:repositoryMapping forKeyPath:@"BWCDRepository"];
+
+
 
 
     NSEntityDescription *buildDescription = [NSEntityDescription entityForName:@"BWCDBuild"
                                                         inManagedObjectContext:self.managedObjectContext];
-    RKManagedObjectMapping *buildMapping = [RKManagedObjectMapping mappingForEntity:buildDescription inManagedObjectStore:manager.objectStore];
-    [buildMapping mapAttributes:@"duration",@"finished_at",@"number",@"result",@"started_at",
-                                @"state", @"status", @"author_email", @"author_name", @"branch", 
-                                @"committed_at", @"committer_email", @"committer_name", @"compare_url",
-                                @"message", @"commit", @"repository_id", nil];
-    [buildMapping mapKeyPath:@"id" toAttribute:@"remote_id"];
-    buildMapping.primaryKeyAttribute = @"remote_id";
 
-    
+    RKEntityMapping *buildMapping = [RKEntityMapping mappingForEntityForName:buildDescription inManagedObjectStore:manager.managedObjectStore];
+    buildMapping.identificationAttributes = @[@"remote_id"];
+    [buildMapping addAttributeMappingsFromArray:@[@"duration",@"finished_at",@"number",@"result",@"started_at",
+                                    @"state", @"status", @"author_email", @"author_name", @"branch",
+                                    @"committed_at", @"committer_email", @"committer_name", @"compare_url",
+                                    @"message", @"commit", @"repository_id"]];
+    [buildMapping addAttributeMappingsFromDictionary:@{
+            @"id" : @"remote_id"
+    }];
+
+
+//    RKManagedObjectMapping *buildMapping = [RKManagedObjectMapping mappingForEntity:buildDescription inManagedObjectStore:manager.objectStore];
+//    [buildMapping mapAttributes:@"duration",@"finished_at",@"number",@"result",@"started_at",
+//                                @"state", @"status", @"author_email", @"author_name", @"branch",
+//                                @"committed_at", @"committer_email", @"committer_name", @"compare_url",
+//                                @"message", @"commit", @"repository_id", nil];
+//    [buildMapping mapKeyPath:@"id" toAttribute:@"remote_id"];
+//    buildMapping.primaryKeyAttribute = @"remote_id";
+
+
     // This mapping isn't right yet.
     NSEntityDescription *jobDescription = [NSEntityDescription entityForName:@"BWCDJob"
                                                       inManagedObjectContext:self.managedObjectContext];
-    RKManagedObjectMapping *buildJobMapping = [RKManagedObjectMapping mappingForEntity:jobDescription inManagedObjectStore:manager.objectStore];
-    [buildJobMapping mapAttributes:@"config", @"finished_at", @"log", @"number", @"repository_id", @"result", @"started_at", @"state", @"status", nil];
-    [buildJobMapping mapKeyPath:@"id" toAttribute:@"remote_id"];
-    buildJobMapping.primaryKeyAttribute = @"remote_id";
-    [manager.mappingProvider setMapping:buildJobMapping forKeyPath:@"BWCDJob"];
-    
-    [buildMapping mapKeyPath:@"matrix"
-              toRelationship:@"jobs"
-                 withMapping:buildJobMapping];
 
-    [manager.mappingProvider setMapping:buildMapping forKeyPath:@"BWCDBuild"];
+    RKEntityMapping *buildJobMapping = [RKEntityMapping mappingForEntityForName:jobDescription inManagedObjectStore:manager.managedObjectStore];
+    [buildJobMapping addAttributeMappingsFromArray:@[@"config", @"finished_at", @"log", @"number", @"repository_id", @"result", @"started_at", @"state", @"status"]];
+    [buildJobMapping addAttributeMappingsFromDictionary:@{
+            @"id" : @"remote_id"
+    }];
+    buildJobMapping.identificationAttributes = @[@"remote_id"];
 
-    [buildMapping mapRelationship:@"repository" withMapping:repositoryMapping];
-    [buildMapping connectRelationship:@"repository" withObjectForPrimaryKeyAttribute:@"repository_id"];
+    [buildMapping addPropertyMapping:[RKRelationshipMapping relationshipMappingFromKeyPath:@"matrix" toKeyPath:@"jobs" withMapping:buildJobMapping]];
+
+
+//    RKManagedObjectMapping *buildJobMapping = [RKManagedObjectMapping mappingForEntity:jobDescription inManagedObjectStore:manager.objectStore];
+//    [buildJobMapping mapAttributes:@"config", @"finished_at", @"log", @"number", @"repository_id", @"result", @"started_at", @"state", @"status", nil];
+//    [buildJobMapping mapKeyPath:@"id" toAttribute:@"remote_id"];
+//    buildJobMapping.primaryKeyAttribute = @"remote_id";
+//    [manager.mappingProvider setMapping:buildJobMapping forKeyPath:@"BWCDJob"];
+
+//    [buildMapping mapKeyPath:@"matrix"
+//              toRelationship:@"jobs"
+//                 withMapping:buildJobMapping];
+
+//    [manager.mappingProvider setMapping:buildMapping forKeyPath:@"BWCDBuild"];
+
+
+    [buildMapping addRelationshipMappingWithSourceKeyPath:@"repository" mapping:repositoryMapping];
+    [buildMapping addConnectionForRelationship:@"repository" connectedBy:@"repository_id"];
+
+//    [buildMapping mapRelationship:@"repository" withMapping:repositoryMapping];
+//    [buildMapping connectRelationship:@"repository" withObjectForPrimaryKeyAttribute:@"repository_id"];
+
+
+    RKResponseDescriptor *repoResponseDescriptor = [RKResponseDescriptor responseDescriptorWithMapping:repositoryMapping
+                                                                                       pathPattern:@"/repositories.json"
+                                                                                           keyPath:nil
+                                                                                       statusCodes:RKStatusCodeIndexSetForClass(RKStatusCodeClassSuccessful)];
+
+    RKResponseDescriptor *buildResponseDescriptor = [RKResponseDescriptor responseDescriptorWithMapping:buildMapping
+                                                                                            pathPattern:@"/builds/:id.json"
+                                                                                                keyPath:nil statusCodes:RKStatusCodeIndexSetForClass(RKStatusCodeClassSuccessful)];
+
+    RKResponseDescriptor *jobResponseDescriptor = [RKResponseDescriptor responseDescriptorWithMapping:buildJobMapping
+                                                                                            pathPattern:@"/jobs/:id.json"
+                                                                                                keyPath:nil statusCodes:RKStatusCodeIndexSetForClass(RKStatusCodeClassSuccessful)];
+
+
+    [manager addResponseDescriptorsFromArray:@[
+            repoResponseDescriptor, buildResponseDescriptor, jobResponseDescriptor
+    ]];
+
 
     // do same two lines above, but for job -> build ?
 }
@@ -197,14 +260,14 @@
 - (NSManagedObjectContext *)managedObjectContext
 {
     if (__managedObjectContext != nil) { return __managedObjectContext; }
-    __managedObjectContext = [[RKObjectManager sharedManager].objectStore managedObjectContextForCurrentThread];
+    __managedObjectContext = [[RKObjectManager sharedManager].managedObjectStore mainQueueManagedObjectContext];
     return __managedObjectContext;
 }
 
 - (NSManagedObjectModel *)managedObjectModel
 {
     if (__managedObjectModel != nil) { return __managedObjectModel; }
-    
+
     NSURL *modelURL = [[NSBundle mainBundle] URLForResource:@"TravisCI" withExtension:@"momd"];
     __managedObjectModel = [[NSManagedObjectModel alloc] initWithContentsOfURL:modelURL];
     return __managedObjectModel;
@@ -219,15 +282,16 @@
 
 #pragma mark - Network failure messages
 
-- (void)objectLoader:(RKObjectLoader *)objectLoader didFailWithError:(NSError *)error
-{
-    UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Network Error"
-                                                    message:@"Could not connect to the Travis CI service"
-                                                   delegate:nil
-                                          cancelButtonTitle:@"Bummer"
-                                          otherButtonTitles:nil];
-    [alert show];
-}
+// --V-- this is now a block callback
+//- (void)objectLoader:(RKObjectLoader *)objectLoader didFailWithError:(NSError *)error
+//{
+//    UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Network Error"
+//                                                    message:@"Could not connect to the Travis CI service"
+//                                                   delegate:nil
+//                                          cancelButtonTitle:@"Bummer"
+//                                          otherButtonTitles:nil];
+//    [alert show];
+//}
 
 - (void)pusher:(PTPusher *)pusher connection:(PTPusherConnection *)connection failedWithError:(NSError *)error
 {
