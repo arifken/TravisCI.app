@@ -71,6 +71,7 @@
 - (void)setupRestKit
 {
 
+
 //    RKLogConfigureByName("RestKit/ObjectMapping", RKLogLevelTrace);
 //    RKLogConfigureByName("RestKit/CoreData", RKLogLevelTrace);
 
@@ -85,12 +86,22 @@
     [AFNetworkActivityIndicatorManager sharedManager].enabled = YES;
 
     manager.managedObjectStore = [[RKManagedObjectStore alloc] initWithManagedObjectModel:self.managedObjectModel];
+    NSURL *cd_file = [[self applicationCacheDirectory] URLByAppendingPathComponent:TRAVIS_CI_CD_FILE_NAME];
 
 
-    NSEntityDescription *repositoryDescription = [NSEntityDescription entityForName:@"BWCDRepository"
-                                                             inManagedObjectContext:self.managedObjectContext];
+    NSError *error = nil;
+    NSPersistentStoreCoordinator *coordinator = [manager.managedObjectStore addSQLitePersistentStoreAtPath:[cd_file path] fromSeedDatabaseAtPath:nil withConfiguration:nil options:nil error:&error];
+    if (!coordinator) {
+        RKLogError(@"Failed adding persistent store at path '%@': %@", cd_file, error);
+    }
 
-    RKEntityMapping *repositoryMapping = [RKEntityMapping mappingForEntityForName:repositoryDescription inManagedObjectStore:manager.managedObjectStore];
+    [manager.managedObjectStore createManagedObjectContexts];
+
+//    NSEntityDescription *repositoryDescription = [NSEntityDescription entityForName:@"BWCDRepository"
+//                                                             inManagedObjectContext:self.managedObjectContext];
+
+
+    RKEntityMapping *repositoryMapping = [RKEntityMapping mappingForEntityForName:@"BWCDRepository" inManagedObjectStore:manager.managedObjectStore];
     repositoryMapping.identificationAttributes = @[@"remote_id"];
     [repositoryMapping addAttributeMappingsFromArray:@[@"slug", @"last_build_started_at", @"last_build_finished_at", @"last_build_duration", @"last_build_id", @"last_build_language", @"last_build_number", @"last_build_result", @"last_build_status"]];
     [repositoryMapping addAttributeMappingsFromDictionary:@{
@@ -114,10 +125,10 @@
 
 
 
-    NSEntityDescription *buildDescription = [NSEntityDescription entityForName:@"BWCDBuild"
-                                                        inManagedObjectContext:self.managedObjectContext];
+//    NSEntityDescription *buildDescription = [NSEntityDescription entityForName:@"BWCDBuild"
+//                                                        inManagedObjectContext:self.managedObjectContext];
 
-    RKEntityMapping *buildMapping = [RKEntityMapping mappingForEntityForName:buildDescription inManagedObjectStore:manager.managedObjectStore];
+    RKEntityMapping *buildMapping = [RKEntityMapping mappingForEntityForName:@"BWCDBuild" inManagedObjectStore:manager.managedObjectStore];
     buildMapping.identificationAttributes = @[@"remote_id"];
     [buildMapping addAttributeMappingsFromArray:@[@"duration",@"finished_at",@"number",@"result",@"started_at",
                                     @"state", @"status", @"author_email", @"author_name", @"branch",
@@ -138,10 +149,10 @@
 
 
     // This mapping isn't right yet.
-    NSEntityDescription *jobDescription = [NSEntityDescription entityForName:@"BWCDJob"
-                                                      inManagedObjectContext:self.managedObjectContext];
+//    NSEntityDescription *jobDescription = [NSEntityDescription entityForName:@"BWCDJob"
+//                                                      inManagedObjectContext:self.managedObjectContext];
 
-    RKEntityMapping *buildJobMapping = [RKEntityMapping mappingForEntityForName:jobDescription inManagedObjectStore:manager.managedObjectStore];
+    RKEntityMapping *buildJobMapping = [RKEntityMapping mappingForEntityForName:@"BWCDJob" inManagedObjectStore:manager.managedObjectStore];
     [buildJobMapping addAttributeMappingsFromArray:@[@"config", @"finished_at", @"log", @"number", @"repository_id", @"result", @"started_at", @"state", @"status"]];
     [buildJobMapping addAttributeMappingsFromDictionary:@{
             @"id" : @"remote_id"
@@ -165,7 +176,7 @@
 
 
     [buildMapping addRelationshipMappingWithSourceKeyPath:@"repository" mapping:repositoryMapping];
-    [buildMapping addConnectionForRelationship:@"repository" connectedBy:@"repository_id"];
+    [buildMapping addConnectionForRelationship:@"repository" connectedBy:@"remote_id"];
 
 //    [buildMapping mapRelationship:@"repository" withMapping:repositoryMapping];
 //    [buildMapping connectRelationship:@"repository" withObjectForPrimaryKeyAttribute:@"repository_id"];
@@ -188,6 +199,8 @@
     [manager addResponseDescriptorsFromArray:@[
             repoResponseDescriptor, buildResponseDescriptor, jobResponseDescriptor
     ]];
+
+
 
 
     // do same two lines above, but for job -> build ?
