@@ -282,29 +282,16 @@
 
 
     NSURLRequest *request = [manager requestWithObject:nil method:RKRequestMethodGET path:@"/repositories.json" parameters:nil];
-    RKObjectRequestOperation *operation = [[RKObjectRequestOperation alloc] initWithRequest:request responseDescriptors:manager.responseDescriptors];
+    RKManagedObjectRequestOperation *operation = [[RKManagedObjectRequestOperation alloc] initWithRequest:request responseDescriptors:manager.responseDescriptors];
+    operation.managedObjectCache = manager.managedObjectStore.managedObjectCache;
+    operation.managedObjectContext = manager.managedObjectStore.mainQueueManagedObjectContext;
     [operation setCompletionBlockWithSuccess:^(RKObjectRequestOperation *op, RKMappingResult *mappingResult) {
-
     } failure:^(RKObjectRequestOperation *op, NSError *error) {
+        NSLog(@"failure = %@",error);
         [self showFailureDialog];
     }];
+    [[RKObjectManager sharedManager] enqueueObjectRequestOperation:operation];
 
-
-
-//    RKObjectMapping *mapping = [RKObjectMapping mappingForClass:[Article class]];
-//    [mapping addAttributeMappingsFromArray:@[@"title", @"author", @"body"]];
-//    NSIndexSet *statusCodes = RKStatusCodeIndexSetForClass(RKStatusCodeClassSuccessful); // Anything in 2xx
-//    RKResponseDescriptor *responseDescriptor = [RKResponseDescriptor responseDescriptorWithMapping:mapping pathPattern:@"/articles/:articleID" keyPath:@"article" statusCodes:statusCodes];
-//
-//    NSURLRequest *request = [NSURLRequest requestWithURL:[NSURL URLWithString:@"http://restkit.org/articles/1234.json"]];
-//    RKObjectRequestOperation *operation = [[RKObjectRequestOperation alloc] initWithRequest:request responseDescriptors:@[responseDescriptor]];
-//    [operation setCompletionBlockWithSuccess:^(RKObjectRequestOperation *operation, RKMappingResult *result) {
-//        Article *article = [result firstObject];
-//        NSLog(@"Mapped the article: %@", article);
-//    } failure:^(RKObjectRequestOperation *operation, NSError *error) {
-//        NSLog(@"Failed with error: %@", [error localizedDescription]);
-//    }];
-//    [operation start];
 }
 
 - (void)refreshFavoritesList
@@ -323,12 +310,15 @@
 //    }
 
     NSURLRequest *request = [manager requestWithObject:nil method:RKRequestMethodGET path:@"/repositories.json" parameters:nil];
-    RKObjectRequestOperation *operation = [[RKObjectRequestOperation alloc] initWithRequest:request responseDescriptors:manager.responseDescriptors];
+    RKManagedObjectRequestOperation *operation = [[RKManagedObjectRequestOperation alloc] initWithRequest:request responseDescriptors:manager.responseDescriptors];
+    operation.managedObjectCache = manager.managedObjectStore.managedObjectCache;
+    operation.managedObjectContext = manager.managedObjectStore.mainQueueManagedObjectContext;
     [operation setCompletionBlockWithSuccess:^(RKObjectRequestOperation *op, RKMappingResult *mappingResult) {
-
     } failure:^(RKObjectRequestOperation *op, NSError *error) {
+        NSLog(@"failure = %@",error);
         [self showFailureDialog];
     }];
+    [[RKObjectManager sharedManager] enqueueObjectRequestOperation:operation];
 
 }
 

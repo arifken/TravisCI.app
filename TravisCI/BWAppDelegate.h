@@ -22,6 +22,7 @@
 @property (nonatomic, strong) BWPusherHandler *pusherHandler;
 @property (nonatomic, strong) BWFavoriteList *favoriteList;
 
+
 - (void)subscribeToLogChannelForJob:(BWCDJob *)job;
 - (void)unsubscribeFromLogChannelForJob:(BWCDJob *)job;
 

@@ -11,6 +11,7 @@
 #import "BWCDRepository.h"
 #import "BWJob+all.h"
 #import "NSManagedObject+BWTravisCI.h"
+#import "BWCDMappingHelper.h"
 
 
 @implementation BWCDObjectMananger
@@ -22,11 +23,7 @@
     RKObjectManager *manager = [RKObjectManager sharedManager];
     RKManagedObjectStore *objectStore = manager.managedObjectStore;
 
-//    NSManagedObjectContext *moc = [[NSManagedObjectContext alloc] init];
-//    moc.persistentStoreCoordinator = objectStore.persistentStoreCoordinator;
-
     NSManagedObjectContext *moc = [objectStore mainQueueManagedObjectContext];
-
 
     BWCDRepository *repository = [BWCDRepository findFirstByAttribute:@"remote_id" withValue:repository_id inContext:moc];
 
@@ -39,16 +36,10 @@
         [moc insertObject:repository];
     }
 
-    RKObjectMapping *mapping = [RKObjectMapping mappingForClass:[BWCDRepository class]];
-    RKMappingOperation *mappingOp = [[RKMappingOperation alloc] initWithSourceObject:repositoryDictionary destinationObject:repository mapping:mapping];
+    BWCDMappingHelper *mappingHelper = [[BWCDMappingHelper alloc] initWithManagedObjectStore:manager.managedObjectStore];
 
+    RKMappingOperation *mappingOp = [[RKMappingOperation alloc] initWithSourceObject:repositoryDictionary destinationObject:repository mapping:mappingHelper.repositoryMapping];
 
-
-                                                 //    RKObjectMappingDefinition *mapping = [manager.mappingProvider mappingForKeyPath:@"BWCDRepository"];
-
-//    RKObjectMappingOperation *mappingOp = [RKObjectMappingOperation mappingOperationFromObject:repositoryDictionary
-//                                                                                      toObject:repository
-//                                                                                   withMapping:mapping];
 
     NSError *error = nil;
     [mappingOp performMapping:&error];
@@ -82,8 +73,10 @@
         [moc insertObject:job];
     }
 
-    RKObjectMapping *mapping = [RKObjectMapping mappingForClass:[BWCDJob class]];
-        RKMappingOperation *mappingOp = [[RKMappingOperation alloc] initWithSourceObject:jobDictionary destinationObject:job mapping:mapping];
+
+    BWCDMappingHelper *mappingHelper = [[BWCDMappingHelper alloc] initWithManagedObjectStore:manager.managedObjectStore];
+
+    RKMappingOperation *mappingOp = [[RKMappingOperation alloc] initWithSourceObject:jobDictionary destinationObject:job mapping:mappingHelper.buildJobMapping];
 
 //    RKObjectMappingDefinition *mapping = [manager.mappingProvider mappingForKeyPath:@"BWCDJob"];
 //    RKObjectMappingOperation *mappingOp = [RKObjectMappingOperation mappingOperationFromObject:jobDictionary
